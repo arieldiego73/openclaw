@@ -15,7 +15,6 @@ import {
 } from "../../config/sessions.js";
 import type { TypingMode } from "../../config/types.js";
 import { resolveSessionTranscriptCandidates } from "../../gateway/session-utils.fs.js";
-import { logVerbose } from "../../globals.js";
 import { emitAgentEvent } from "../../infra/agent-events.js";
 import { emitDiagnosticEvent, isDiagnosticsEnabled } from "../../infra/diagnostic-events.js";
 import { enqueueSystemEvent } from "../../infra/system-events.js";
@@ -1348,12 +1347,6 @@ export async function runReplyAgent(params: {
     }
 
     const currentMessageId = sessionCtx.MessageSidFull ?? sessionCtx.MessageSid;
-    if (resetTriggered === true) {
-      logVerbose(
-        `reset-triggered payload build: currentMessageId=${sessionCtx.MessageSidFull ?? sessionCtx.MessageSid ?? "<none>"} replyToMode=${replyToMode} payloadCount=${payloadArray.length}`,
-      );
-    }
-
     const payloadResult = await buildReplyPayloads({
       payloads: payloadArray,
       isHeartbeat,
@@ -1380,13 +1373,6 @@ export async function runReplyAgent(params: {
     });
     const { replyPayloads } = payloadResult;
     didLogHeartbeatStrip = payloadResult.didLogHeartbeatStrip;
-
-    if (resetTriggered === true) {
-      const threadedPayloads = replyPayloads.filter((payload) => Boolean(payload.replyToId));
-      logVerbose(
-        `reset-triggered payload result: total=${replyPayloads.length} threaded=${threadedPayloads.length} replyToIds=${threadedPayloads.map((payload) => payload.replyToId).join(",") || "-"}`,
-      );
-    }
 
     if (replyPayloads.length === 0) {
       return finalizeWithFollowup(undefined, queueKey, runFollowupTurn);

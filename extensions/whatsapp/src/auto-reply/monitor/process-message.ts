@@ -1,3 +1,4 @@
+import { resolveBatchedReplyThreadingPolicy } from "openclaw/plugin-sdk/reply-reference";
 import { getPrimaryIdentityId, getSelfIdentity, getSenderIdentity } from "../../identity.js";
 import {
   resolveWhatsAppCommandAuthorized,
@@ -226,6 +227,10 @@ export async function processMessage(params: {
     isSelfChat: params.msg.chatType !== "group" && inboundPolicy.isSelfChat,
     pipelineResponsePrefix: replyPipeline.responsePrefix,
   });
+  const replyThreading = resolveBatchedReplyThreadingPolicy(
+    account.replyToMode ?? "off",
+    params.msg.isBatched === true,
+  );
 
   const ctxPayload = buildWhatsAppInboundContext({
     combinedBody,
@@ -240,6 +245,7 @@ export async function processMessage(params: {
       name: sender.name ?? undefined,
       e164: sender.e164 ?? undefined,
     },
+    replyThreading,
     visibleReplyTo: visibleReplyTo ?? undefined,
   });
 

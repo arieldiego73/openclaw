@@ -1,4 +1,3 @@
-import { logVerbose } from "../../globals.js";
 import { shouldHandleTextCommands } from "../commands-registry.js";
 import { emitResetCommandHooks } from "./commands-reset-hooks.js";
 import { maybeHandleResetCommand } from "./commands-reset.js";
@@ -18,16 +17,10 @@ function loadCommandHandlersRuntime() {
 
 let HANDLERS: CommandHandler[] | null = null;
 
-function normalizeCommandHandlerResult(
-  result: CommandHandlerResult,
-  commandBodyNormalized?: string,
-): CommandHandlerResult {
+function normalizeCommandHandlerResult(result: CommandHandlerResult): CommandHandlerResult {
   if (!result.reply) {
     return result;
   }
-  logVerbose(
-    `command reply path: command=${commandBodyNormalized ?? "<unknown>"} directReply=true replyToCurrent=false`,
-  );
   return {
     ...result,
     reply: {
@@ -44,7 +37,7 @@ export async function handleCommands(params: HandleCommandsParams): Promise<Comm
   }
   const resetResult = await maybeHandleResetCommand(params);
   if (resetResult) {
-    return normalizeCommandHandlerResult(resetResult, params.command.commandBodyNormalized);
+    return normalizeCommandHandlerResult(resetResult);
   }
 
   const allowTextCommands = shouldHandleTextCommands({
@@ -56,7 +49,7 @@ export async function handleCommands(params: HandleCommandsParams): Promise<Comm
   for (const handler of HANDLERS) {
     const result = await handler(params, allowTextCommands);
     if (result) {
-      return normalizeCommandHandlerResult(result, params.command.commandBodyNormalized);
+      return normalizeCommandHandlerResult(result);
     }
   }
 

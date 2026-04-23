@@ -11,7 +11,7 @@ import {
 import type { OpenClawConfig } from "openclaw/plugin-sdk/config-runtime";
 import { resolveOutboundSendDep, sanitizeForPlainText } from "openclaw/plugin-sdk/infra-runtime";
 import { WHATSAPP_LEGACY_OUTBOUND_SEND_DEP_KEYS } from "./outbound-send-deps.js";
-import { lookupInboundMessageMeta, lookupInboundMessageMetaById } from "./quoted-message.js";
+import { lookupInboundMessageMetaForTarget } from "./quoted-message.js";
 import { toWhatsappJid } from "./text-runtime.js";
 
 type WhatsAppChunker = NonNullable<ChannelOutboundAdapter["chunker"]>;
@@ -106,16 +106,16 @@ export function createWhatsAppOutboundBase({
       return undefined;
     }
     const targetJid = toWhatsappJid(params.to);
-    const cachedMeta = lookupInboundMessageMeta(params.accountId, targetJid, replyToId);
-    const fallbackMeta = cachedMeta
-      ? undefined
-      : lookupInboundMessageMetaById(params.accountId, replyToId);
+    const cachedMeta = lookupInboundMessageMetaForTarget(params.accountId, targetJid, replyToId);
+    if (!cachedMeta) {
+      return undefined;
+    }
     return {
       id: replyToId,
-      remoteJid: fallbackMeta?.remoteJid ?? targetJid,
+      remoteJid: cachedMeta.remoteJid,
       fromMe: false,
-      participant: cachedMeta?.participant ?? fallbackMeta?.participant,
-      messageText: cachedMeta?.body ?? fallbackMeta?.body,
+      participant: cachedMeta.participant,
+      messageText: cachedMeta.body,
     };
   };
 

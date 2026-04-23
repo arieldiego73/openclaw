@@ -898,6 +898,13 @@ describe("gateway send mirroring", () => {
         replyToId: "wamid.42",
       }),
     );
+    expect(mocks.resolveOutboundSessionRoute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "slack",
+        target: "123",
+        replyToId: "wamid.42",
+      }),
+    );
     expect(respond).toHaveBeenCalledWith(
       true,
       expect.objectContaining({ messageId: "m-reply" }),
